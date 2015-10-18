@@ -1,0 +1,19 @@
+1. select Movie from appeared_in where STAR = "Edward Norton"
+
+2. select distinct Star_with.STAR from appeared_in Star_with, appeared_in Pitt where Pitt.STAR = "Brad Pitt" and Pitt.Movie = Star_with.Movie and Star_with.STAR != "Brad Pitt"
+
+3. select sum(distinct made_money.HOW_MUCH) from made_money, appeared_in First_Star, appeared_in Second_Star where First_Star.STAR = "Tom Hanks" and Second_Star.STAR = "Rita Wilson" and First_Star.Movie = Second_Star.Movie and First_Star.Movie = made_money.Movie
+
+4. select distinct Second_one.STAR from divorced, in_couple First_one, in_couple Second_one where divorced.COUPLE_NUM = First_one.COUPLE_NUM and First_one.STAR = "Ben Affleck" and First_one.COUPLE_NUM = Second_one.COUPLE_NUM and First_one.STAR != Second_one.STAR
+
+5. select distinct in_couple.STAR from married, divorced, in_couple where married.DAY = divorced.DAY and married.COUPLE_NUM = in_couple.COUPLE_NUM
+
+6. select distinct F_one.STAR from appeared_in F_one, appeared_in S_one, made_money, married, in_couple F, in_couple S where F_one.Movie = S_one.Movie and F_one.STAR != S_one.STAR and F_one.STAR = F.STAR and S_one.STAR = S.STAR and F.COUPLE_NUM = S.COUPLE_NUM and made_money.Movie = F_one.Movie and married.DAY >= made_money.DAY_OPENED
+
+7. select STAR from (select STAR, count(Movie) as count from appeared_in group by STAR order by count desc) FIRST_STEP where FIRST_STEP.count >= ALL ( select count(Movie) as count from appeared_in group by STAR order by count desc)
+
+8. select distinct Star1, Star2, married_num from (select distinct F.STAR as Star1, S.STAR as Star2, count(F.COUPLE_NUM) as married_num from in_couple F, in_couple S where F.STAR != S.STAR and F.couple_num = S.couple_num group by F.STAR, S.STAR having count(F.COUPLE_NUM)>1) TABLE_ONE group by married_num
+
+9. select F.STAR, count(F.STAR) from in_couple F, divorced D where F.COUPLE_NUM = D.COUPLE_NUM group by F.STAR having count(F.STAR)>=2
+
+10. select star, max(AVG_NUM) from (select F.star, avg(C.how_much) AVG_NUM from appeared_in F, made_money C where F.movie = C.movie group by F.star order by avg(C.how_much) desc) FIRST_STEP
