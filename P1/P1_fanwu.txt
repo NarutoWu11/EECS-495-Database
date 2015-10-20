@@ -12,7 +12,7 @@
 
 7. select STAR from (select STAR, count(Movie) as count from appeared_in group by STAR order by count desc) FIRST_STEP where FIRST_STEP.count >= ALL ( select count(Movie) as count from appeared_in group by STAR order by count desc)
 
-8. select distinct Star1, Star2, married_num from (select distinct F.STAR as Star1, S.STAR as Star2, count(F.COUPLE_NUM) as married_num from in_couple F, in_couple S where F.STAR != S.STAR and F.couple_num = S.couple_num group by F.STAR, S.STAR having count(F.COUPLE_NUM)>1) TABLE_ONE group by married_num
+8. select Star1, Star2, count(COUPLE_NUM) as married_num from (select distinct F.STAR as Star1, S.STAR as Star2, F.COUPLE_NUM from in_couple F, in_couple S where F.STAR != S.STAR and F.couple_num = S.couple_num group by F.COUPLE_NUM) Table_one group by Star1, Star2 having count(COUPLE_NUM) > 1
 
 9. select F.STAR, count(F.STAR) from in_couple F, divorced D where F.COUPLE_NUM = D.COUPLE_NUM group by F.STAR having count(F.STAR)>=2
 
