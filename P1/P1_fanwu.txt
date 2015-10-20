@@ -1,19 +1,105 @@
-1. select Movie from appeared_in where STAR = "Edward Norton"
+SQLProgram1
 
-2. select distinct Star_with.STAR from appeared_in Star_with, appeared_in Pitt where Pitt.STAR = "Brad Pitt" and Pitt.Movie = Star_with.Movie and Star_with.STAR != "Brad Pitt"
+Name: Fan Wu
+NetID: fwz766
 
-3. select sum(distinct made_money.HOW_MUCH) from made_money, appeared_in First_Star, appeared_in Second_Star where First_Star.STAR = "Tom Hanks" and Second_Star.STAR = "Rita Wilson" and First_Star.Movie = Second_Star.Movie and First_Star.Movie = made_money.Movie
 
-4. select distinct Second_one.STAR from divorced, in_couple First_one, in_couple Second_one where divorced.COUPLE_NUM = First_one.COUPLE_NUM and First_one.STAR = "Ben Affleck" and First_one.COUPLE_NUM = Second_one.COUPLE_NUM and First_one.STAR != Second_one.STAR
+1. What movies has ‘Edward Norton' appeared in?
+select Movie from appeared_in where STAR = "Edward Norton";
 
-5. select distinct in_couple.STAR from married, divorced, in_couple where married.DAY = divorced.DAY and married.COUPLE_NUM = in_couple.COUPLE_NUM
 
-6. select distinct F_one.STAR from appeared_in F_one, appeared_in S_one, made_money, married, in_couple F, in_couple S where F_one.Movie = S_one.Movie and F_one.STAR != S_one.STAR and F_one.STAR = F.STAR and S_one.STAR = S.STAR and F.COUPLE_NUM = S.COUPLE_NUM and made_money.Movie = F_one.Movie and married.DAY >= made_money.DAY_OPENED
+2. Who has starred along with 'Brad Pitt' in the some movie? 
+select distinct Star_with.STAR from appeared_in Star_with, appeared_in Pitt where Pitt.STAR = "Brad Pitt" and Pitt.Movie = Star_with.Movie and Star_with.STAR != "Brad Pitt";
 
-7. select STAR from (select STAR, count(Movie) as count from appeared_in group by STAR order by count desc) FIRST_STEP where FIRST_STEP.count >= ALL ( select count(Movie) as count from appeared_in group by STAR order by count desc)
 
-8. select Star1, Star2, count(COUPLE_NUM) as married_num from (select distinct F.STAR as Star1, S.STAR as Star2, F.COUPLE_NUM from in_couple F, in_couple S where F.STAR != S.STAR and F.couple_num = S.couple_num group by F.COUPLE_NUM) Table_one group by Star1, Star2 having count(COUPLE_NUM) > 1
+3. How much money, in total, have movies earned in which 'Tom Hanks' and 'RitaWilson' starred together?
+select sum(distinct made_money.HOW_MUCH) from made_money, appeared_in First_Star, appeared_in Second_Star where First_Star.STAR = "Tom Hanks" and Second_Star.STAR = "Rita Wilson" and First_Star.Movie = Second_Star.Movie and First_Star.Movie = made_money.Movie;
 
-9. select F.STAR, count(F.STAR) from in_couple F, divorced D where F.COUPLE_NUM = D.COUPLE_NUM group by F.STAR having count(F.STAR)>=2
 
-10. select star, max(AVG_NUM) from (select F.star, avg(C.how_much) AVG_NUM from appeared_in F, made_money C where F.movie = C.movie group by F.star order by avg(C.how_much) desc) FIRST_STEP
+4. Who has (have) divorced 'Ben Affleck'?
+select distinct Second_one.STAR from divorced, in_couple First_one, in_couple Second_one where divorced.COUPLE_NUM = First_one.COUPLE_NUM and First_one.STAR = "Ben Affleck" and First_one.COUPLE_NUM = Second_one.COUPLE_NUM and First_one.STAR != Second_one.STAR;
+
+
+5. Which stars were married and then divorced on the same day? 
+select distinct in_couple.STAR from married, divorced, in_couple where married.DAY = divorced.DAY and married.COUPLE_NUM = in_couple.COUPLE_NUM;
+
+
+6. What stars who married one another could possibly have met while working on the same movie?
+select star1, star2
+from
+(
+select distinct F_one.STAR as star1, S_one.Star as star2, F.COUPLE_NUM
+from appeared_in F_one, appeared_in S_one, made_money, married, in_couple F, in_couple S 
+where F_one.Movie = S_one.Movie and F_one.STAR != S_one.STAR and F_one.STAR = F.STAR 
+and S_one.STAR = S.STAR and F.COUPLE_NUM = S.COUPLE_NUM and made_money.Movie = F_one.Movie 
+and married.DAY >= made_money.DAY_OPENED and married.COUPLE_NUM = F.COUPLE_NUM
+group by F.COUPLE_NUM
+) couple_num_group
+group by star1, star2;
+
+
+7. What star has appeared in the most movies? 
+select STAR from (select STAR, count(Movie) as count from appeared_in group by STAR order by count desc) FIRST_STEP where FIRST_STEP.count >= ALL ( select count(Movie) as count from appeared_in group by STAR order by count desc);
+
+
+8. Which pairs of stars were married to each other more than once? 
+select distinct COUPLE_NUM, Star1, Star2, count(COUPLE_NUM) as married_num from (select distinct F.STAR as Star1, S.STAR as Star2, F.COUPLE_NUM from in_couple F, in_couple S where F.STAR != S.STAR and F.couple_num = S.couple_num group by F.COUPLE_NUM) Table_one group by Star1, Star2 having count(COUPLE_NUM) > 1;
+
+
+9. Which star or stars have been divorced at least two times? 
+select F.STAR, count(F.STAR) from in_couple F, divorced D where F.COUPLE_NUM = D.COUPLE_NUM group by F.STAR having count(F.STAR)>=2;
+
+
+10. Which star has averaged the highest box office for all films appeared in? 
+select star, max(AVG_NUM) from (select F.star, avg(C.how_much) AVG_NUM from appeared_in F, made_money C where F.movie = C.movie group by F.star order by avg(C.how_much) desc) FIRST_STEP;
+
+
+11. Which couple averaged the most money per film while they were married? 
+create view Married_Divorced as
+select distinct F.STAR as Star1, S.STAR as Star2, F.COUPLE_NUM, M.DAY as Married_Day, D.DAY as Divorcde_Day 
+from in_couple F, in_couple S, married M, divorced D
+where F.STAR != S.STAR and F.couple_num = S.couple_num and F.COUPLE_NUM = M.COUPLE_NUM and F.COUPLE_NUM = D.COUPLE_NUM
+group by F.COUPLE_NUM;
+
+create view Married_DATE as
+select distinct F.STAR as Star1, S.STAR as Star2, F.COUPLE_NUM, M.DAY as Married_Day
+from in_couple F, in_couple S, married M
+where F.STAR != S.STAR and F.couple_num = S.couple_num and F.COUPLE_NUM = M.COUPLE_NUM
+group by F.COUPLE_NUM;
+
+create view Only_Married as
+select distinct Married_DATE.Star1, Married_DATE.Star2, Married_DATE.COUPLE_NUM, Married_DATE.Married_Day
+from Married_Divorced, Married_DATE 
+where not exists (select * from Married_Divorced where Married_DATE.COUPLE_NUM = Married_Divorced.COUPLE_NUM);
+
+create view MD_MONEY as
+select MD.COUPLE_NUM, A.STAR, MM.how_much
+from Married_Divorced MD, appeared_in A, made_money MM
+where MM.DAY_OPENED >= MD.Married_Day and MM.DAY_OPENED <= MD.Divorcde_Day and A.Movie = MM.Movie and (A.STAR = MD.Star1 or MD.Star2);
+
+create view OM_MONEY as
+select OM.COUPLE_NUM, A.STAR, MM.how_much
+from Only_Married OM, appeared_in A, made_money MM
+where MM.DAY_OPENED >= OM.Married_Day and A.Movie = MM.Movie and (A.STAR = OM.Star1 or OM.Star2);
+
+select COUPLE_NUM, max(money_per_movie)
+from 
+(
+select COUPLE_NUM, AVG(how_much) as money_per_movie
+from
+(
+select COUPLE_NUM, STAR, how_much 
+from MD_MONEY
+union
+select COUPLE_NUM, STAR, how_much 
+from OM_MONEY) total
+group by COUPLE_NUM
+order by AVG(how_much) desc
+) money_per_movie_results;
+
+drop view MD_MONEY;
+drop view OM_MONEY;
+drop view Married_Divorced;
+drop view Married_DATE;
+drop view Only_Married;
+
