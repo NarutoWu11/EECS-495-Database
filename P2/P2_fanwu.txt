@@ -1,0 +1,108 @@
+P2
+
+1.
+mysql> delimiter //
+create trigger made_money_insert before insert on made_money
+    for each row
+    begin
+		if new.Category != "Comedy" and new.Category != "Drama" and new.Category!= "Action" and new.Category != "Romantic" then 
+        set new.Category = "Action";
+        end if;
+        
+        
+    
+		if new.HOW_MUCH < 1000 or new.HOW_MUCH > 3000000000
+        then
+            SIGNAL SQLSTATE 'HY000' 
+            SET MESSAGE_TEXT = "check constraint on made_money" ; 
+        end if;
+        if new.Category = "Action" and new.HOW_MUCH < 10000
+        then
+			SIGNAL SQLSTATE 'HY000' 
+            SET MESSAGE_TEXT = "check constraint on made_money" ; 
+		end if;
+        if new.Category = "Comedy" and new.HOW_MUCH > 1000000000
+        then
+			SIGNAL SQLSTATE 'HY000' 
+            SET MESSAGE_TEXT = "check constraint on made_money" ; 
+		end if;
+        
+    end; //
+    
+create trigger movie_category_update before update on made_money
+    for each row
+    begin
+		if new.Category != "Comedy" and new.Category != "Drama" and new.Category!= "Action" and new.Category != "Romantic" then 
+        set new.Category = "Action";
+        end if;
+    end; //
+    
+mysql> delimiter ;
+
+2.
+mysql> delimiter //
+
+create trigger comedy_insert after insert on appeared_in
+    for each row
+    begin
+		if (select category from made_money M where M.Movie = new.Movie ) = "Comedy" and
+        not exists (select C.Movie From made_money C, made_money E, appeared_in D where D.star = new.star and D.movie = C.movie and (C.Category = "Romantic" or "Comedy" or "Drama") and E.Movie = new.Movie and C.DAY_OPENED < E.DAY_OPENED)
+        then 
+			update made_money
+            set Category = "Drama"
+            where new.Movie = made_money.Movie;
+        end if;
+    end; //
+    
+
+mysql> delimiter ;
+
+3.
+mysql> delimiter //
+
+create trigger married_insert before insert on married
+    for each row
+    begin
+		if exists 
+        (select distinct * from in_couple C left join 
+			married M on C.COUPLE_NUM = M.COUPLE_NUM left join 
+            divorced D on C.COUPLE_NUM = D.COUPLE_NUM, 
+			(select W.STAR 
+				from married Ma, in_couple W, in_couple H 
+                where new.COUPLE_NUM = W.COUPLE_NUM and 
+					new.COUPLE_NUM = H.COUPLE_NUM and
+                    W.STAR != H.STAR) as FS
+			where FS.star = C.STAR and
+				C.COUPLE_NUM != new.COUPLE_NUM and
+                new.day >= ifnull(M.DAY, "2020-12-12") and
+                new.day <= ifnull(D.DAY, "2020-12-12")
+        )
+        then
+            SIGNAL SQLSTATE 'HY000' 
+            SET MESSAGE_TEXT = "check constraint on married" ;  
+        end if;
+    end; //
+    
+
+mysql> delimiter ;
+
+4.
+The answer to this question is included in the trigger made_money_insert in question 1.
+
+5.
+mysql> delimiter //
+
+create trigger divorced_insert before insert on divorced
+    for each row
+    begin
+		if new.DAY < (select DAY from married where COUPLE_NUM = new.COUPLE_NUM)
+        then 
+			
+            set new.Day = (select DAY from married where COUPLE_NUM = new.COUPLE_NUM);
+            
+        end if;
+    end; //
+    
+mysql> delimiter ;
+
+6.
