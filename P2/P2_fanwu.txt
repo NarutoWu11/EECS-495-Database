@@ -1,5 +1,8 @@
 P2
+Name: Fan Wu
+NetID: fwz766
 
+(1) Submit the syntax for the triggers.
 1.
 mysql> delimiter //
 create trigger made_money_insert before insert on made_money
@@ -106,3 +109,37 @@ create trigger divorced_insert before insert on divorced
 mysql> delimiter ;
 
 6.
+mysql> delimiter //
+
+create trigger made_money_insert_log_data after insert on made_money
+    for each row
+    begin
+		insert into log_data
+		values (new.MOVIE, new.Category);
+    end; //
+    
+
+mysql> delimiter ;
+
+(2) Submit your observations as to what happens in the database when you perform the following statements.
+
+a) Success. 
+
+b) Success. But change the category from "Horror" to "Action".
+
+c) Success. But change the category of "Bruce Almighty" from "Comedy" to "Drama".
+
+d) Error: "check constraint on married". 
+
+e) The first insert is error: "check constraint on made_money"; The second one is successful.
+
+f) Error: "check constraint on made_money".
+
+g) Success. But change the day into "2005-06-25".
+
+(3) LOG_DATA table after performing the above statements:
+
+'IRON MAN','Action'
+'Speed','Comedy'
+
+
