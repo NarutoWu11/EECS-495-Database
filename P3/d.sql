@@ -22,7 +22,7 @@ BEGIN
     
     if (select count(*) from transcript where StudId= student_ID and UoSCode = class_ID) = 1
 	then 
-		set mode_num = 2;
+		set mode_num = 0student;
         select mode_num;
     elseif @num_class = @res
     then
@@ -38,18 +38,14 @@ BEGIN
 	else
 		set mode_num = 2;
         select B.PrereqUoSCode
-        from (select A.PrereqUoSCode from requires A where A.UoSCode = class_ID) B, 
-        (
-			select requires.PrereqUoSCode
-			from requires, transcript A, uosoffering
-			where requires.UoSCode = class_ID and A.StudId = student_ID and requires.PrereqUoSCode = A.UoSCode and
-			A.grade is not NULL and A.grade != 'F'
+		from 
+		(select UoSCode, PrereqUoSCode from requires where UoSCode = @class_ID) B
+		where B.PrereqUoSCode not in (select requires.PrereqUoSCode
+		from requires, transcript A, uosoffering
+		where requires.UoSCode = @class_ID and A.StudId = @student_ID and requires.PrereqUoSCode = A.UoSCode and
+		A.grade is not NULL and A.grade != 'F' and A.UoSCode != @class_ID
+		and uosoffering.UoSCode = @class_ID and uosoffering.year = @year_num and uosoffering.Semester = @semester_num and uosoffering.MaxEnrollment > uosoffering.Enrollment);
 			
-			and uosoffering.UoSCode = class_ID and uosoffering.year = year_num and uosoffering.Semester = semester_num and uosoffering.MaxEnrollment > uosoffering.Enrollment
-
-			) C
-        where B.PrereqUoSCode != C.PrereqUoSCode
-        ;
         
     end if;
 END //
